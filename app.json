@@ -1,0 +1,36 @@
+{
+    "name": "Anonymous Sender",
+    "description": "Advanced anonymous sender bot with caption editor.",
+    "keywords": [
+        "captioneditor",
+        "AnonymousSender",
+        "Telegram Bot",
+        "TeamDaisyX Bots"
+    ],
+    "repository": "https://github.com/InukaAsith/AnonymousSender",
+    "success_url": "https://t.me/daisysupport_official",
+    "env": {
+        "BOT_TOKEN": {
+            "description": "Your Telegram Bot Token from @BotFather",
+            "value": ""
+        },
+        "API_HASH": {
+            "description": "Your API Hash from my.telegram.org",
+            "value": ""
+        },
+        "API_ID": {
+            "description": "Your APP ID from my.telegram.org",
+            "value": ""
+        }
+    },
+    "addons": [],
+    "buildpacks": [
+        {"url": "heroku/python"}
+    ],
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "free"
+        }
+    }
+}
