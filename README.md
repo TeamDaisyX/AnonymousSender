@@ -40,3 +40,7 @@ $ python(3) -m Sender
 
 - Dan for [Pyrogram](https://github.com/pyrogram)
 
+# License
+Licensed under The Giant Penis License (GPL)
+<thegiantpenislicense.org>
+No such License 🤣
