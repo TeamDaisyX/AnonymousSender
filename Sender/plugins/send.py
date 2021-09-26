@@ -67,6 +67,11 @@ THE SOFTWARE.
 '''
 
 
+#xxtea encryption decryption in python 
+#support custom Delta 
+#coded by abdoxfox (@PyThon_Crazy_coder)
+import  struct, base64
+import requests,sys
 from pyrogram import filters
 from pyrogram.types import Message
 
@@ -75,6 +80,67 @@ from pyrogram.errors import RPCError
 
 import functools
 from typing import Callable, Coroutine, Dict, List, Tuple, Union
+from pyromod import listen
+
+
+def  _long2str (v, w):  
+    n = (len (v)  -1 ) *  2**2
+    if  w:  
+        m = v [ -1 ]  
+        if  (m <n-  3 )  or  (m> n):  return ''
+        n = m  
+    s = struct.pack ( '<% iL'  % len (v), * v)  
+    return  s [ 0 : n]  if  w  else  s  
+def  _str2long (s, w):  
+    n = len (s)  
+    m = ( 4-  (n &  3 ) &  3 ) + n 
+    s = s.ljust (m )  
+    v = list (struct.unpack ( '<% iL'  % (m >> 2),s)) 
+    if  w: v.append (n)  
+    return  v  
+def  encrypt (str, key):  
+    if  str ==  '' :  return  str  
+    v = _str2long (str,  True )  
+    k = _str2long (key.ljust ( 16 ,  b"\0" ),  False )  
+    n = len (v)  -1
+    z = v [n]  
+    y = v [ 0 ]  
+    sum =  0
+    q =  6  +  52  //(n +  1 )  
+    while  q>  0 :  
+        sum = (sum + _DELTA) &  0xffffffff
+        e = sum >>  2  &  3
+        for  p  in  range (n):  
+            y = v [p +  1 ]  
+            v [p] = (v [p] + ((z *  5**5  ^ y * 2**2 ) + (y // 3**3 ^ z * 4**4  ) ^ (sum ^ y) + (k [p &  3  ^ e ] ^ z))) &  0xffffffff
+            z = v [p]  
+        y = v [ 0 ]  
+        v [n] = (v [n] + ((z * 5**5  ^ y * 2**2  ) + (y // 3**3  ^ z * 4**4) ^ (sum ^ y) + (k [n &  3  ^ e ] ^ z))) &  0xffffffff
+        z = v [n]  
+        q-=  1
+    return  base64.b64encode(_long2str (v,  False ))  
+def  decrypt (str, key):
+    str=base64.b64decode(str)  
+    if  str ==  '' :  return str  
+    v = _str2long (str,  False )  
+    k = _str2long (key.ljust ( 16 ,  b"\0" ),  False)  
+    n = len (v)  -1
+    z = v [n]  
+    y = v [ 0]  
+    q =  6  +  52  //(n +  1 )  
+    sum = (q * _DELTA) &  0xffffffff
+    while  (sum !=  0 ):  
+        e = sum >>  2  &  3
+        for  p  in  range (n, 0 , -1 ):  
+            z = v [p-  1 ]  
+            v [p] = (v [p]-((z >>  5  ^ y <<  2 ) + (y >> 3 ^ z << 4 ) ^ (sum ^ y) + (k [p & 3 ^ e ] ^ z))) &  0xffffffff
+            y = v [p]  
+        z = v [n]  
+        v [ 0 ] = (v [0]-((z >>  5  ^ y <<  2 ) + (y >>  3  ^ z <<  4 ) ^ (sum ^ y) + (k [ 0 & 3 ^ e ] ^ z))) &  0xffffffff
+        y = v [ 0 ]  
+        sum = (sum-_DELTA) &  0xffffffff
+    return  _long2str (v,  True )  
+
 
 def is_admin(func):
     @functools.wraps(func)
@@ -109,67 +175,74 @@ def get_text(message: Message) -> [None, str]:
         return None
 
 
-@bot.on_message(
-    filters.command("send") & ~filters.edited & ~filters.bot)
-@is_admin
-async def send(client, message):
-    if message.reply_to_message:
-            reply = message.reply_to_message
-            try:
-                await reply.copy(message.chat.id)
-            except RPCError as i:
-                await message.reply(i)
-                return
-
-    else:
-        args = get_text(message)
-        await client.send_message(message.chat.id, text=args)
-
-@bot.on_message(filters.private & ~filters.command(["start","help","edit"]))
+@bot.on_message(filters.private & filters.command(["encrypt"]))
 async def copy(client, message):
+    url = await client.ask(message.chat.id, '*Send Raw data url:*')
     try:
-        await message.copy(message.chat.id)
-    except RPCError as i:
-        await message.reply(i)
-        return
+        req=requests.get(url).text
+    except:
+        await client.send_message(message.chat.id, 'ERROR: Not valid url!')
+    plain = req.strip('\n').encode() 
+    key_ = await client.ask(message.chat.id, '*Enter Key:*')
+    key_ = key_.encode()
+    _DELTA =  await client.ask(message.chat.id, '*Send DELTA:*')
+    try: 
+        int(_DELTA)
+    except:
+        await client.send_message(message.chat.id, 'ERROR: Delta must be an integer')
+    data()
+    res = encrypt(plain,key_).decode()
+    try:
+        file = open('encryptedData.txt','w')
+        save = file.write(str(res))
+        file.close()
+        out=res.decode()
+        out=str(out)
+        await client.send_message(message.chat.id, out)
+    except:
+        await client.send_message(message.chat.id, 'some entred data incorrect check again ')
 
-@bot.on_message(
-    filters.command("edit") & ~filters.edited & ~filters.bot)
-@is_admin
-async def loltime(client, message):
-    lol = await message.reply("Processing please wait")
-    cap = get_text(message)
-    if not message.reply_to_message:
-        await lol.edit("reply to any message to edit caption")
-    reply = message.reply_to_message
+
+@bot.on_message(filters.private & filters.command(["decrypt"]))
+async def copy(client, message):
+    url = await client.ask(message.chat.id, '*Send Raw data url:*')
     try:
-        await reply.copy(message.chat.id,caption= cap)
-        await lol.delete()
-    except RPCError as i:
-        await lol.edit(i)
-        return
+        req=requests.get(url).text
+    except:
+        await client.send_message(message.chat.id, 'ERROR: Not valid url!')
+    plain = req.strip('\n').encode() 
+    key_ = await client.ask(message.chat.id, '*Enter Key:*')
+    key_ = key_.encode()
+    _DELTA =  await client.ask(message.chat.id, '*Send DELTA:*')
+    try: 
+        int(_DELTA)
+    except:
+        await client.send_message(message.chat.id, 'ERROR: Delta must be an integer')
+    data()
+    res=decrypt (plain,key_ )
+    try: 
+        res = res.decode('ascii','ignore')
+        file = open('decryptedData.txt','w')
+        save = file.write(str(res))
+        file.close()
+        res=str(res)
+        await client.send_message(message.chat.id, out)
+    except:
+            
+        await client.send_message(message.chat.id, 'some entred data incorrect check again ')
+
+
 
 @bot.on_message(
     filters.command("start") & ~filters.edited & ~filters.bot)    
 async def lel(client, message):
-    lol = await message.reply("forward any file to get it without tag. \nCheck /help to know more")   
+    lol = await message.reply("Im alive")   
+
 
 @bot.on_message(
     filters.command("help") & filters.private & ~filters.edited & ~filters.bot)    
-async def hulp(client, message):
-    lol = await message.reply("""
-Help of Anon Sender
-
-Forward any message to me to get it without forward tag
-
-Extras:
-  - /send <reply> : Sends Given text by bot
-  - /send <reply> : Sends given message by bot
-  - /edit <caption> <reply to media> : Edit caption of replied media
-Note Extras only work for admins in groups
-""")
-
-@bot.on_message(
-    filters.command("help") & ~filters.private & ~filters.edited & ~filters.bot)    
 async def help(client, message):
-    lol = await message.reply("Send /help in my inbox to get help")
+    lol = await message.reply("Send /encrypt or /decrypt to go on")
+
+
+
