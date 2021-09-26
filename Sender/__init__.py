@@ -68,6 +68,7 @@ THE SOFTWARE.
 
 
 import logging
+from pyromod import listen
 from pyrogram import Client
 from config import API_HASH, API_ID, BOT_TOKEN
 
