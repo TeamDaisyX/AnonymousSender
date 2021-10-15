@@ -10,7 +10,7 @@
     "repository": "https://github.com/InukaAsith/AnonymousSender",
     "success_url": "https://t.me/daisysupport_official",
     "env": {
-        "BOT_TOKEN": {
+        "SESSION": {
             "description": "Your Telegram Bot Token from @BotFather",
             "value": ""
         },
