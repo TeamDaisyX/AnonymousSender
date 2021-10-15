@@ -4,7 +4,7 @@ import requests,sys
 from pyrogram import filters
 from pyrogram.types import Message
 
-from Sender import bot
+from Sender import bot, LOG_GRP
 from pyrogram.errors import RPCError
 
 import functools
