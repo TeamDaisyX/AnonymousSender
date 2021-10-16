@@ -21,7 +21,11 @@
         "API_ID": {
             "description": "Your APP ID from my.telegram.org",
             "value": ""
-        }
+        },
+        "LOG_GRP": {
+            "description": "Give username of group to forward",
+            "value": ""
+        }        
     },
     "addons": [],
     "buildpacks": [
